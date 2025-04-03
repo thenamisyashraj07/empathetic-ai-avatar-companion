@@ -6,7 +6,7 @@ import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { ChatInterface } from '@/components/ChatInterface';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Headphones, Volume, VolumeOff, MessageCircle, GraduationCap, FileCheck, Briefcase } from 'lucide-react';
+import { Volume, VolumeOff, MessageCircle, GraduationCap, FileCheck, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { EngagementTracker } from '@/components/EngagementTracker';
@@ -16,7 +16,6 @@ const Index = () => {
   const [voiceEmotion, setVoiceEmotion] = useState<string>('neutral');
   const [isAvatarActive, setIsAvatarActive] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [currentTab, setCurrentTab] = useState('chat');
   const [currentContext, setCurrentContext] = useState<'learning' | 'assessment' | 'interview'>('learning');
   const [engagementLevel, setEngagementLevel] = useState<number>(5); // Scale of 1-10
   const { toast } = useToast();
@@ -123,95 +122,86 @@ const Index = () => {
       
       <main className="container mx-auto flex-1 px-4 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Avatar Section - Always Visible */}
+          {/* Left Column - Avatar & Sensors */}
           <div className="lg:col-span-4 lg:order-1 order-1">
-            <Card className="h-full">
-              <CardContent className="p-6">
-                <AvatarDisplay 
-                  emotion={currentEmotion} 
-                  isAnimating={isAvatarActive}
-                />
-                
-                {/* Engagement Tracker */}
-                {currentContext !== 'interview' && (
-                  <div className="mt-4">
-                    <EngagementTracker level={engagementLevel} context={currentContext} />
+            <div className="space-y-6">
+              {/* Avatar Section */}
+              <Card className="overflow-hidden">
+                <CardContent className="p-6">
+                  <AvatarDisplay 
+                    emotion={currentEmotion} 
+                    isAnimating={isAvatarActive}
+                    isSpeaking={isSpeaking}
+                  />
+                  
+                  {/* Engagement Tracker */}
+                  {currentContext !== 'interview' && (
+                    <div className="mt-4">
+                      <EngagementTracker level={engagementLevel} context={currentContext} />
+                    </div>
+                  )}
+                  
+                  <div className="mt-6 flex justify-center">
+                    <Button
+                      variant={isSpeaking ? "default" : "outline"}
+                      onClick={toggleSpeaking}
+                      className="flex items-center"
+                    >
+                      {isSpeaking ? (
+                        <>
+                          <VolumeOff className="mr-2 h-4 w-4" />
+                          Mute Voice
+                        </>
+                      ) : (
+                        <>
+                          <Volume className="mr-2 h-4 w-4" />
+                          Enable Voice
+                        </>
+                      )}
+                    </Button>
                   </div>
-                )}
-                
-                <div className="mt-6 flex justify-center">
-                  <Button
-                    variant={isSpeaking ? "default" : "outline"}
-                    onClick={toggleSpeaking}
-                    className="flex items-center"
-                  >
-                    {isSpeaking ? (
-                      <>
-                        <VolumeOff className="mr-2 h-4 w-4" />
-                        Mute Voice
-                      </>
-                    ) : (
-                      <>
-                        <Volume className="mr-2 h-4 w-4" />
-                        Enable Voice
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+              
+              {/* Webcam Capture - Always Visible */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-medium mb-4">Facial Emotion Detection</h3>
+                  <WebcamCapture onEmotionDetected={handleFaceEmotionDetected} />
+                </CardContent>
+              </Card>
+              
+              {/* Voice Capture - Always Visible */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-medium mb-4">Voice Emotion Detection</h3>
+                  <VoiceCapture 
+                    onEmotionDetected={handleVoiceEmotionDetected} 
+                    onSpeechDetected={handleSpeechDetected}
+                  />
+                </CardContent>
+              </Card>
+            </div>
           </div>
           
-          {/* Main Interaction Area */}
-          <div className="lg:col-span-8 lg:order-2 order-3 flex flex-col">
-            <Tabs 
-              defaultValue="chat" 
-              value={currentTab}
-              onValueChange={setCurrentTab}
-              className="w-full h-full flex flex-col"
-            >
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="chat">
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Chat
-                </TabsTrigger>
-                <TabsTrigger value="sensors">
-                  <Headphones className="mr-2 h-4 w-4" />
-                  Sensors
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="chat" className="flex-1 mt-4">
+          {/* Right Column - Chat Interface */}
+          <div className="lg:col-span-8 lg:order-2 order-2">
+            <Card className="h-full">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <MessageCircle className="mr-2 h-5 w-5 text-companion" />
+                  <h2 className="text-xl font-medium">Chat with AI Companion</h2>
+                </div>
+                
                 <ChatInterface 
                   detectedEmotion={currentEmotion}
                   onSendMessage={handleMessageSent}
-                  className="h-[500px]"
+                  className="h-[650px]"
                   context={currentContext}
                   engagementLevel={engagementLevel}
                 />
-              </TabsContent>
-              
-              <TabsContent value="sensors" className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-medium mb-4">Facial Emotion Detection</h3>
-                      <WebcamCapture onEmotionDetected={handleFaceEmotionDetected} />
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-medium mb-4">Voice Emotion Detection</h3>
-                      <VoiceCapture 
-                        onEmotionDetected={handleVoiceEmotionDetected} 
-                        onSpeechDetected={handleSpeechDetected}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-            </Tabs>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
