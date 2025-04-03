@@ -1,36 +1,50 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Volume, VolumeOff } from 'lucide-react';
+import { Mic, MicOff, Volume, VolumeOff, Headphones } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface VoiceCaptureProps {
   onEmotionDetected?: (emotion: string) => void;
   onSpeechDetected?: (text: string) => void;
+  onTextToSpeech?: (text: string) => void;
   className?: string;
+  autoStart?: boolean;
 }
 
 const MOCK_EMOTIONS = ['calm', 'excited', 'anxious', 'neutral'];
 const MOCK_PHRASES = [
   "Hello, how are you today?",
-  "I'm feeling a bit tired",
-  "Can you help me with something?",
-  "I had a great day today",
-  "I'm not sure what to do"
+  "I'm finding this lesson interesting",
+  "Can you explain this concept again?",
+  "I'm not sure I understand this part",
+  "This is making sense now"
 ];
 
 export const VoiceCapture: React.FC<VoiceCaptureProps> = ({ 
   onEmotionDetected,
   onSpeechDetected,
-  className 
+  onTextToSpeech,
+  className,
+  autoStart = false
 }) => {
   const [isListening, setIsListening] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [isSpeakingDemo, setIsSpeakingDemo] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const { toast } = useToast();
+
+  // Auto-start if requested
+  useEffect(() => {
+    if (autoStart && !isListening && hasPermission !== false) {
+      startListening();
+    }
+  }, [autoStart]);
 
   // Mock emotion detection for demo
   useEffect(() => {
@@ -48,13 +62,34 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
   useEffect(() => {
     if (isListening && onSpeechDetected) {
       const interval = setInterval(() => {
-        const randomPhrase = MOCK_PHRASES[Math.floor(Math.random() * MOCK_PHRASES.length)];
-        onSpeechDetected(randomPhrase);
+        // Only generate speech sometimes
+        if (Math.random() > 0.5) {
+          const randomPhrase = MOCK_PHRASES[Math.floor(Math.random() * MOCK_PHRASES.length)];
+          onSpeechDetected(randomPhrase);
+          
+          toast({
+            title: "Speech Detected",
+            description: randomPhrase,
+          });
+        }
       }, 10000);
 
       return () => clearInterval(interval);
     }
-  }, [isListening, onSpeechDetected]);
+  }, [isListening, onSpeechDetected, toast]);
+
+  // Demo AI voice responses
+  const speakDemoResponse = (text: string) => {
+    if (onTextToSpeech) {
+      setIsSpeakingDemo(true);
+      onTextToSpeech(text);
+      
+      // Simulate speech duration
+      setTimeout(() => {
+        setIsSpeakingDemo(false);
+      }, text.length * 80); // Approximate time based on text length
+    }
+  };
 
   const startListening = async () => {
     try {
@@ -72,6 +107,13 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
       updateAudioLevel();
       setIsListening(true);
       setHasPermission(true);
+      
+      // Welcome message
+      if (onTextToSpeech) {
+        setTimeout(() => {
+          speakDemoResponse("Hello! I'm your AI learning assistant. I'm listening and ready to help with your studies.");
+        }, 1000);
+      }
     } catch (err) {
       console.error("Error accessing microphone:", err);
       setHasPermission(false);
@@ -120,6 +162,21 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
     }
   };
 
+  // Demo function to test text-to-speech
+  const testTextToSpeech = () => {
+    if (onTextToSpeech) {
+      const demoTexts = [
+        "I notice you're working hard on this. Great job staying focused!",
+        "Let me know if you need me to explain any concepts in more detail.",
+        "Don't forget to take short breaks to maintain your concentration.",
+        "Your engagement with this material is excellent! Keep it up!"
+      ];
+      
+      const randomText = demoTexts[Math.floor(Math.random() * demoTexts.length)];
+      speakDemoResponse(randomText);
+    }
+  };
+
   return (
     <div className={cn("flex flex-col items-center", className)}>
       <div className="relative rounded-lg overflow-hidden bg-gray-900 mb-4 w-full p-4 flex items-center justify-center h-20">
@@ -151,25 +208,43 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
             )}
           </div>
         )}
+        
+        {isSpeakingDemo && (
+          <div className="absolute top-1 right-1 bg-companion text-white text-xs px-2 py-0.5 rounded-full">
+            AI Speaking...
+          </div>
+        )}
       </div>
       
-      <Button 
-        onClick={toggleListening}
-        variant={isListening ? "destructive" : "default"}
-        className="mb-2"
-      >
-        {isListening ? (
-          <>
-            <MicOff className="mr-2 h-4 w-4" />
-            Stop Listening
-          </>
-        ) : (
-          <>
-            <Mic className="mr-2 h-4 w-4" />
-            Start Listening
-          </>
-        )}
-      </Button>
+      <div className="flex space-x-2">
+        <Button 
+          onClick={toggleListening}
+          variant={isListening ? "destructive" : "default"}
+          className="mb-2"
+        >
+          {isListening ? (
+            <>
+              <MicOff className="mr-2 h-4 w-4" />
+              Stop Listening
+            </>
+          ) : (
+            <>
+              <Mic className="mr-2 h-4 w-4" />
+              Start Listening
+            </>
+          )}
+        </Button>
+        
+        <Button
+          onClick={testTextToSpeech}
+          variant="outline"
+          className="mb-2"
+          disabled={!isListening}
+        >
+          <Headphones className="mr-2 h-4 w-4" />
+          Test AI Voice
+        </Button>
+      </div>
     </div>
   );
 };

@@ -11,6 +11,7 @@ interface AvatarDisplayProps {
   isAnimating?: boolean;
   isSpeaking?: boolean;
   className?: string;
+  message?: string;
 }
 
 // Simple 3D Avatar Component
@@ -83,10 +84,26 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   emotion = 'neutral',
   isAnimating = false,
   isSpeaking = false,
-  className 
+  className,
+  message
 }) => {
   const [waveAnimation, setWaveAnimation] = useState(false);
   const [use3DAvatar, setUse3DAvatar] = useState(true);
+  const [speechBubble, setSpeechBubble] = useState<string | null>(null);
+  
+  // Display speech bubble when the message changes
+  useEffect(() => {
+    if (message && isSpeaking) {
+      setSpeechBubble(message);
+      
+      // Clear the speech bubble after a delay
+      const timer = setTimeout(() => {
+        setSpeechBubble(null);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [message, isSpeaking]);
   
   // Trigger wave animation occasionally when the avatar is animating
   useEffect(() => {
@@ -156,7 +173,7 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
       className
     )}>
       {use3DAvatar ? (
-        // 3D Avatar
+        // 3D Avatar with speech bubble
         <div className={cn(
           "relative rounded-lg overflow-hidden w-full aspect-square max-w-xs transition-all duration-500 shadow-lg",
           isAnimating && "ring-2 ring-companion"
@@ -186,6 +203,13 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
               👋
             </div>
           )}
+          
+          {speechBubble && (
+            <div className="absolute top-0 right-0 max-w-[90%] bg-white border-2 border-companion rounded-2xl p-3 m-3 shadow-lg text-sm animate-fade-in">
+              {speechBubble}
+              <div className="absolute bottom-0 right-6 w-4 h-4 bg-white border-r-2 border-b-2 border-companion transform rotate-45 translate-y-2"></div>
+            </div>
+          )}
         </div>
       ) : (
         // 2D Avatar (Original)
@@ -204,6 +228,13 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
           {waveAnimation && (
             <div className="absolute -right-2 -bottom-2 text-4xl animate-wave origin-bottom-right">
               👋
+            </div>
+          )}
+          
+          {speechBubble && (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 max-w-[200px] bg-white border-2 border-companion rounded-2xl p-3 shadow-lg text-sm animate-fade-in">
+              {speechBubble}
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-2 border-t-2 border-companion transform -rotate-45"></div>
             </div>
           )}
         </div>
