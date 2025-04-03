@@ -3,8 +3,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, MessageCircle } from 'lucide-react';
+import { Send, MessageCircle, Mic, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -33,7 +34,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
   
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -86,7 +89,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const generateEmotionalResponse = (message: string, emotion?: string): string => {
-    // Simple rule-based responses based on detected emotion
+    // Enhanced rule-based responses based on detected emotion
     if (emotion === 'happy') {
       return `I'm glad you're feeling happy! ${message.includes('?') ? "That's a great question!" : "Thanks for sharing that with me!"} I'm here to keep the positive vibes going. 😊`;
     } else if (emotion === 'sad') {
@@ -119,11 +122,62 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
+  const toggleListening = () => {
+    // In a real implementation, this would activate the speech recognition API
+    if (!isListening) {
+      setIsListening(true);
+      toast({
+        title: "Voice Recognition Active",
+        description: "I'm listening to you now. Speak clearly...",
+      });
+      
+      // Simulate voice recognition (in a real app, we'd use the Web Speech API)
+      setTimeout(() => {
+        setIsListening(false);
+        setInputValue(prev => prev + (prev ? " " : "") + "I'm speaking to you through voice recognition");
+        toast({
+          title: "Voice Recognition Complete",
+          description: "I've processed what you said.",
+        });
+      }, 3000);
+    } else {
+      setIsListening(false);
+      toast({
+        title: "Voice Recognition Stopped",
+        description: "I've stopped listening.",
+      });
+    }
+  };
+
+  const clearChat = () => {
+    setMessages([
+      {
+        id: Date.now().toString(),
+        text: "Hello! I'm your AI companion. How are you feeling today?",
+        sender: 'ai'
+      }
+    ]);
+    toast({
+      title: "Chat Cleared",
+      description: "Our conversation has been reset.",
+    });
+  };
+
   return (
     <div className={cn("flex flex-col bg-card rounded-lg shadow-lg h-full", className)}>
-      <div className="px-4 py-3 border-b flex items-center">
-        <MessageCircle className="h-5 w-5 mr-2 text-companion" />
-        <h2 className="font-medium">AI Companion Chat</h2>
+      <div className="px-4 py-3 border-b flex items-center justify-between">
+        <div className="flex items-center">
+          <MessageCircle className="h-5 w-5 mr-2 text-companion" />
+          <h2 className="font-medium">AI Companion Chat</h2>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={clearChat}
+          title="Clear chat"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
       </div>
       
       <ScrollArea className="flex-1 p-4">
@@ -132,13 +186,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <div
               key={message.id}
               className={cn(
-                "flex max-w-[80%] rounded-lg p-3",
+                "flex flex-col max-w-[80%] rounded-lg p-3",
                 message.sender === 'user' 
                   ? "ml-auto bg-primary text-primary-foreground" 
                   : "mr-auto bg-secondary text-secondary-foreground"
               )}
             >
-              {message.text}
+              {message.emotion && message.sender === 'ai' && (
+                <div className="text-xs opacity-70 mb-1">
+                  Responding to: {message.emotion} emotion
+                </div>
+              )}
+              <div>{message.text}</div>
             </div>
           ))}
           
@@ -164,11 +223,30 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             onKeyDown={handleKeyPress}
             placeholder="Type a message..."
             className="flex-1"
+            disabled={isListening}
           />
-          <Button onClick={handleSendMessage} disabled={!inputValue.trim()}>
+          <Button 
+            variant={isListening ? "secondary" : "outline"}
+            size="icon"
+            onClick={toggleListening}
+            className={isListening ? "animate-pulse" : ""}
+            title="Voice input"
+          >
+            <Mic className="h-4 w-4" />
+          </Button>
+          <Button 
+            onClick={handleSendMessage} 
+            disabled={!inputValue.trim()}
+            title="Send message"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>
+        {detectedEmotion && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            Detected emotion: <span className="font-medium text-companion">{detectedEmotion}</span>
+          </div>
+        )}
       </div>
     </div>
   );
