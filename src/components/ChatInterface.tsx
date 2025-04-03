@@ -88,7 +88,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const generateEmotionalResponse = (message: string, emotion?: string): string => {
     // Simple rule-based responses based on detected emotion
     if (emotion === 'happy') {
-      return `I'm glad you're feeling happy! ${message.includes('?') ? 'That's a great question!' : 'Thanks for sharing that with me!'} I'm here to keep the positive vibes going. 😊`;
+      return `I'm glad you're feeling happy! ${message.includes('?') ? "That's a great question!" : "Thanks for sharing that with me!"} I'm here to keep the positive vibes going. 😊`;
     } else if (emotion === 'sad') {
       return `I notice you might be feeling down. Remember that it's okay to feel this way sometimes. I'm here to listen and support you. Is there anything specific that's troubling you?`;
     } else if (emotion === 'angry') {
