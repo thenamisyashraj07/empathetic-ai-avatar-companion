@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +37,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -50,7 +48,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
     
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputValue,
@@ -60,19 +57,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     
-    // Notify parent component if callback provided
     if (onSendMessage) {
       onSendMessage(inputValue);
     }
     
-    // Simulate AI response based on detected emotion
     simulateResponse(inputValue, detectedEmotion);
   };
 
   const simulateResponse = (userMessage: string, emotion?: string) => {
     setIsTyping(true);
     
-    // Simulate typing delay (1-2 seconds)
     setTimeout(() => {
       const response = generateEmotionalResponse(userMessage, emotion);
       
@@ -89,21 +83,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const generateEmotionalResponse = (message: string, emotion?: string): string => {
-    // Enhanced rule-based responses based on detected emotion
     if (emotion === 'happy') {
-      return `I'm glad you're feeling happy! ${message.includes('?') ? "That's a great question!" : "Thanks for sharing that with me!"} I'm here to keep the positive vibes going. 😊`;
+      return "I'm glad you're feeling happy! " + (message.includes('?') ? "That's a great question!" : "Thanks for sharing that with me!") + " I'm here to keep the positive vibes going. 😊";
     } else if (emotion === 'sad') {
-      return `I notice you might be feeling down. Remember that it's okay to feel this way sometimes. I'm here to listen and support you. Is there anything specific that's troubling you?`;
+      return "I notice you might be feeling down. Remember that it's okay to feel this way sometimes. I'm here to listen and support you. Is there anything specific that's troubling you?";
     } else if (emotion === 'angry') {
-      return `I understand that you might be feeling frustrated right now. Taking deep breaths can sometimes help. Would you like to talk more about what's bothering you?`;
+      return "I understand that you might be feeling frustrated right now. Taking deep breaths can sometimes help. Would you like to talk more about what's bothering you?";
     } else if (emotion === 'anxious' || emotion === 'surprised') {
-      return `It seems like something might have caught you off guard. I'm here to help you process these feelings. Would you like to talk more about it?`;
+      return "It seems like something might have caught you off guard. I'm here to help you process these feelings. Would you like to talk more about it?";
     } else if (emotion === 'excited') {
-      return `Your enthusiasm is contagious! I'm excited too! Tell me more about what's got you so energized!`;
+      return "Your enthusiasm is contagious! I'm excited too! Tell me more about what's got you so energized!";
     } else if (emotion === 'calm') {
-      return `I appreciate this peaceful moment we're sharing. It's nice to have these balanced conversations. What's on your mind?`;
+      return "I appreciate this peaceful moment we're sharing. It's nice to have these balanced conversations. What's on your mind?";
     } else {
-      // Default/neutral response
       if (message.toLowerCase().includes('how are you')) {
         return "I'm doing well, thank you for asking! I'm here to assist and chat with you. How can I help you today?";
       } else if (message.toLowerCase().includes('help')) {
@@ -123,7 +115,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const toggleListening = () => {
-    // In a real implementation, this would activate the speech recognition API
     if (!isListening) {
       setIsListening(true);
       toast({
@@ -131,7 +122,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         description: "I'm listening to you now. Speak clearly...",
       });
       
-      // Simulate voice recognition (in a real app, we'd use the Web Speech API)
       setTimeout(() => {
         setIsListening(false);
         setInputValue(prev => prev + (prev ? " " : "") + "I'm speaking to you through voice recognition");
