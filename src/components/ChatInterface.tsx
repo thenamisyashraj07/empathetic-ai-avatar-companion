@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,17 +18,21 @@ interface ChatInterfaceProps {
   detectedEmotion?: string;
   onSendMessage?: (message: string) => void;
   className?: string;
+  context?: 'learning' | 'assessment' | 'interview';
+  engagementLevel?: number;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
   detectedEmotion,
   onSendMessage,
-  className 
+  className,
+  context = 'learning',
+  engagementLevel = 5
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello! I'm your AI companion. How are you feeling today?",
+      text: getInitialMessage(context),
       sender: 'ai'
     }
   ]);
@@ -41,9 +46,33 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     scrollToBottom();
   }, [messages]);
   
+  // Update initial message when context changes
+  useEffect(() => {
+    setMessages([
+      {
+        id: Date.now().toString(),
+        text: getInitialMessage(context),
+        sender: 'ai'
+      }
+    ]);
+  }, [context]);
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  function getInitialMessage(context: string): string {
+    switch (context) {
+      case 'learning':
+        return "Hello! I'm your AI learning companion. How can I help with your studies today?";
+      case 'assessment':
+        return "Welcome to your assessment session. I'll be monitoring your responses to ensure academic integrity. Feel free to ask any questions about the process.";
+      case 'interview':
+        return "Welcome to your virtual interview session. I'm here to help you practice and provide feedback on your responses. What position are you interviewing for?";
+      default:
+        return "Hello! I'm your AI companion. How are you feeling today?";
+    }
+  }
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -68,7 +97,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setIsTyping(true);
     
     setTimeout(() => {
-      const response = generateEmotionalResponse(userMessage, emotion);
+      const response = generateContextAwareResponse(userMessage, emotion, context, engagementLevel);
       
       const aiMessage: Message = {
         id: Date.now().toString(),
@@ -82,7 +111,49 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }, Math.random() * 1000 + 1000);
   };
 
-  const generateEmotionalResponse = (message: string, emotion?: string): string => {
+  const generateContextAwareResponse = (message: string, emotion?: string, context?: string, engagement?: number): string => {
+    // Base response on context first, then emotion
+    if (context === 'learning') {
+      if (engagement && engagement < 3) {
+        return "I notice you seem disengaged. Would you like to take a short break or try a different approach to this topic?";
+      }
+      
+      if (message.toLowerCase().includes('quiz') || message.toLowerCase().includes('test')) {
+        return "I can help you prepare for your quiz. Would you like to go through some practice questions together?";
+      }
+      
+      if (message.toLowerCase().includes('explain') || message.toLowerCase().includes('understand')) {
+        return "I'd be happy to explain that concept. Let me break it down step by step, and please stop me if anything is unclear.";
+      }
+    } 
+    else if (context === 'assessment') {
+      if (message.length < 20) {
+        return "Could you elaborate on your answer a bit more? This will help me better assess your understanding.";
+      }
+      
+      if (message.toLowerCase().includes('hint') || message.toLowerCase().includes('help')) {
+        return "While I can't provide direct answers during an assessment, I can guide you to think about the key concepts you've learned that might apply here.";
+      }
+      
+      if (message.toLowerCase().includes('time') || message.toLowerCase().includes('left')) {
+        return "You still have plenty of time for this assessment. Take your time to think through your answers carefully.";
+      }
+    }
+    else if (context === 'interview') {
+      if (message.toLowerCase().includes('nervous') || message.toLowerCase().includes('anxious')) {
+        return "It's completely normal to feel nervous before an interview. Take a deep breath, and remember that this is just a conversation to see if you're a good fit for each other.";
+      }
+      
+      if (message.toLowerCase().includes('strength') || message.toLowerCase().includes('weakness')) {
+        return "That's a common interview question. When discussing strengths, be specific and provide examples. For weaknesses, show self-awareness and how you're working to improve.";
+      }
+      
+      if (message.toLowerCase().includes('salary') || message.toLowerCase().includes('compensation')) {
+        return "When discussing compensation, it's good to have researched the market rate for your position and experience level. Be confident in your value, but also flexible.";
+      }
+    }
+    
+    // If no context-specific response, fall back to emotion-based responses
     if (emotion === 'happy') {
       return "I'm glad you're feeling happy! " + (message.includes('?') ? "That's a great question!" : "Thanks for sharing that with me!") + " I'm here to keep the positive vibes going. 😊";
     } else if (emotion === 'sad') {
@@ -143,7 +214,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setMessages([
       {
         id: Date.now().toString(),
-        text: "Hello! I'm your AI companion. How are you feeling today?",
+        text: getInitialMessage(context),
         sender: 'ai'
       }
     ]);
@@ -153,12 +224,31 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     });
   };
 
+  // Add helper text based on context
+  const getPlaceholderText = () => {
+    switch (context) {
+      case 'learning':
+        return "Ask about a topic or concept...";
+      case 'assessment':
+        return "Answer the question or ask for clarification...";
+      case 'interview':
+        return "Respond to the interview question...";
+      default:
+        return "Type a message...";
+    }
+  };
+
   return (
     <div className={cn("flex flex-col bg-card rounded-lg shadow-lg h-full", className)}>
       <div className="px-4 py-3 border-b flex items-center justify-between">
         <div className="flex items-center">
           <MessageCircle className="h-5 w-5 mr-2 text-companion" />
-          <h2 className="font-medium">AI Companion Chat</h2>
+          <h2 className="font-medium">
+            {context === 'learning' && "Learning Assistant"}
+            {context === 'assessment' && "Assessment Monitor"}
+            {context === 'interview' && "Interview Coach"}
+            {!context && "AI Companion Chat"}
+          </h2>
         </div>
         <Button 
           variant="ghost" 
@@ -211,7 +301,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Type a message..."
+            placeholder={getPlaceholderText()}
             className="flex-1"
             disabled={isListening}
           />
@@ -232,6 +322,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <Send className="h-4 w-4" />
           </Button>
         </div>
+        
+        {context === 'assessment' && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            <strong>Note:</strong> Your responses are being analyzed for academic integrity.
+          </div>
+        )}
+        
         {detectedEmotion && (
           <div className="mt-2 text-xs text-muted-foreground">
             Detected emotion: <span className="font-medium text-companion">{detectedEmotion}</span>
