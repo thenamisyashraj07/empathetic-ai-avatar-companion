@@ -4,6 +4,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import * as THREE from 'three';
 
 interface AvatarDisplayProps {
   emotion?: string;
@@ -33,44 +34,44 @@ const Avatar3D = ({ emotion = 'neutral', isAnimating = false, isSpeaking = false
       {/* Head */}
       <mesh position={[0, 0, 0]} scale={isAnimating ? [1.05, 1.05, 1.05] : [1, 1, 1]}>
         <sphereGeometry args={[1, 32, 32]} />
-        <meshStandardMaterial color={getEmotionColor()} />
+        <meshStandardMaterial color={new THREE.Color(getEmotionColor())} />
       </mesh>
       
       {/* Eyes */}
       <mesh position={[-0.3, 0.2, 0.85]}>
         <sphereGeometry args={[0.12, 16, 16]} />
-        <meshStandardMaterial color="#ffffff" />
+        <meshStandardMaterial color={new THREE.Color("#ffffff")} />
       </mesh>
       <mesh position={[0.3, 0.2, 0.85]}>
         <sphereGeometry args={[0.12, 16, 16]} />
-        <meshStandardMaterial color="#ffffff" />
+        <meshStandardMaterial color={new THREE.Color("#ffffff")} />
       </mesh>
       
       {/* Pupils */}
       <mesh position={[-0.3, 0.2, 0.98]}>
         <sphereGeometry args={[0.06, 16, 16]} />
-        <meshStandardMaterial color="#000000" />
+        <meshStandardMaterial color={new THREE.Color("#000000")} />
       </mesh>
       <mesh position={[0.3, 0.2, 0.98]}>
         <sphereGeometry args={[0.06, 16, 16]} />
-        <meshStandardMaterial color="#000000" />
+        <meshStandardMaterial color={new THREE.Color("#000000")} />
       </mesh>
       
       {/* Mouth - changes based on emotion and speaking state */}
       {emotion === 'happy' || emotion === 'excited' ? (
         <mesh position={[0, -0.3, 0.85]} rotation={[0, 0, isSpeaking ? Math.PI * 0.1 : 0]}>
           <torusGeometry args={[0.4, 0.1, 16, 100, Math.PI]} />
-          <meshStandardMaterial color="#000000" />
+          <meshStandardMaterial color={new THREE.Color("#000000")} />
         </mesh>
       ) : emotion === 'sad' ? (
         <mesh position={[0, -0.5, 0.85]} rotation={[Math.PI, 0, 0]}>
           <torusGeometry args={[0.3, 0.08, 16, 100, Math.PI]} />
-          <meshStandardMaterial color="#000000" />
+          <meshStandardMaterial color={new THREE.Color("#000000")} />
         </mesh>
       ) : (
         <mesh position={[0, -0.3, 0.85]} scale={isSpeaking ? [1, 0.5 + Math.sin(Date.now() * 0.01) * 0.2, 1] : [1, 0.2, 1]}>
           <boxGeometry args={[0.5, 0.1, 0.1]} />
-          <meshStandardMaterial color="#000000" />
+          <meshStandardMaterial color={new THREE.Color("#000000")} />
         </mesh>
       )}
     </>
