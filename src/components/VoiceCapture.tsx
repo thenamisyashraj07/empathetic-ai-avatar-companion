@@ -31,7 +31,7 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { toast } = useToast();
 
   // Auto-start if requested
@@ -61,9 +61,9 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
 
   // Initialize Web Speech API
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition && !recognitionRef.current) {
-      const recognition = new SpeechRecognition();
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognitionAPI && !recognitionRef.current) {
+      const recognition = new SpeechRecognitionAPI();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
@@ -72,7 +72,7 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
         console.log('Speech recognition started');
       };
       
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         let interimTranscript = '';
         let finalTranscript = '';
         
@@ -100,7 +100,7 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
         }
       };
       
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
       };
       
