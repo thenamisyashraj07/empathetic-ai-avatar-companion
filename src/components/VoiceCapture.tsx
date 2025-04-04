@@ -14,13 +14,6 @@ interface VoiceCaptureProps {
 }
 
 const MOCK_EMOTIONS = ['calm', 'excited', 'anxious', 'neutral'];
-const MOCK_PHRASES = [
-  "Hello, how are you today?",
-  "I'm finding this lesson interesting",
-  "Can you explain this concept again?",
-  "I'm not sure I understand this part",
-  "This is making sense now"
-];
 
 export const VoiceCapture: React.FC<VoiceCaptureProps> = ({ 
   onEmotionDetected,
@@ -33,10 +26,12 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
   const [isSpeakingDemo, setIsSpeakingDemo] = useState(false);
+  const [recognizedText, setRecognizedText] = useState('');
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
 
   // Auto-start if requested
@@ -44,6 +39,12 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
     if (autoStart && !isListening && hasPermission !== false) {
       startListening();
     }
+    
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
   }, [autoStart]);
 
   // Mock emotion detection for demo
@@ -58,36 +59,96 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
     }
   }, [isListening, onEmotionDetected]);
 
-  // Mock speech recognition for demo
+  // Initialize Web Speech API
   useEffect(() => {
-    if (isListening && onSpeechDetected) {
-      const interval = setInterval(() => {
-        // Only generate speech sometimes
-        if (Math.random() > 0.5) {
-          const randomPhrase = MOCK_PHRASES[Math.floor(Math.random() * MOCK_PHRASES.length)];
-          onSpeechDetected(randomPhrase);
-          
-          toast({
-            title: "Speech Detected",
-            description: randomPhrase,
-          });
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition && !recognitionRef.current) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      
+      recognition.onstart = () => {
+        console.log('Speech recognition started');
+      };
+      
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
         }
-      }, 10000);
-
-      return () => clearInterval(interval);
+        
+        if (finalTranscript) {
+          setRecognizedText(finalTranscript);
+          console.log('Final transcript:', finalTranscript);
+          
+          if (onSpeechDetected) {
+            onSpeechDetected(finalTranscript);
+            
+            toast({
+              title: "Speech Detected",
+              description: finalTranscript,
+            });
+          }
+        }
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+      };
+      
+      recognition.onend = () => {
+        console.log('Speech recognition ended');
+        // Auto restart if still in listening mode
+        if (isListening) {
+          recognition.start();
+        }
+      };
+      
+      recognitionRef.current = recognition;
     }
-  }, [isListening, onSpeechDetected, toast]);
+  }, [onSpeechDetected, toast, isListening]);
 
-  // Demo AI voice responses
-  const speakDemoResponse = (text: string) => {
+  // Demo AI voice responses using Web Speech API
+  const speakWithWebSpeech = (text: string) => {
     if (onTextToSpeech) {
       setIsSpeakingDemo(true);
-      onTextToSpeech(text);
       
-      // Simulate speech duration
-      setTimeout(() => {
+      // Use the Web Speech API for text-to-speech
+      const speech = new SpeechSynthesisUtterance();
+      speech.text = text;
+      speech.volume = 1;
+      speech.rate = 1;
+      speech.pitch = 1;
+      
+      // Try to find a more natural female voice
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(voice => 
+        voice.name.includes('Female') || 
+        voice.name.includes('Samantha') || 
+        voice.name.includes('Google') ||
+        voice.name.includes('Assistant')
+      );
+      
+      if (preferredVoice) {
+        speech.voice = preferredVoice;
+      }
+      
+      speech.onend = () => {
         setIsSpeakingDemo(false);
-      }, text.length * 80); // Approximate time based on text length
+      };
+      
+      window.speechSynthesis.speak(speech);
+      
+      // Pass to parent component as well
+      onTextToSpeech(text);
     }
   };
 
@@ -108,12 +169,19 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
       setIsListening(true);
       setHasPermission(true);
       
-      // Welcome message
-      if (onTextToSpeech) {
-        setTimeout(() => {
-          speakDemoResponse("Hello! I'm your AI learning assistant. I'm listening and ready to help with your studies.");
-        }, 1000);
+      // Start speech recognition if available
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch (e) {
+          console.error('Error starting speech recognition:', e);
+        }
       }
+      
+      // Welcome message
+      setTimeout(() => {
+        speakWithWebSpeech("Hello! I'm your AI learning assistant. I'm listening and ready to help with your studies.");
+      }, 1000);
     } catch (err) {
       console.error("Error accessing microphone:", err);
       setHasPermission(false);
@@ -150,6 +218,10 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
       cancelAnimationFrame(animationFrameRef.current);
     }
     
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    
     setIsListening(false);
     setAudioLevel(0);
   };
@@ -164,17 +236,15 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
 
   // Demo function to test text-to-speech
   const testTextToSpeech = () => {
-    if (onTextToSpeech) {
-      const demoTexts = [
-        "I notice you're working hard on this. Great job staying focused!",
-        "Let me know if you need me to explain any concepts in more detail.",
-        "Don't forget to take short breaks to maintain your concentration.",
-        "Your engagement with this material is excellent! Keep it up!"
-      ];
-      
-      const randomText = demoTexts[Math.floor(Math.random() * demoTexts.length)];
-      speakDemoResponse(randomText);
-    }
+    const demoTexts = [
+      "I notice you're working hard on this. Great job staying focused!",
+      "Let me know if you need me to explain any concepts in more detail.",
+      "Don't forget to take short breaks to maintain your concentration.",
+      "Your engagement with this material is excellent! Keep it up!"
+    ];
+    
+    const randomText = demoTexts[Math.floor(Math.random() * demoTexts.length)];
+    speakWithWebSpeech(randomText);
   };
 
   return (
@@ -201,11 +271,17 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
                 style={{ width: `${audioLevel}%` }}
               />
             </div>
-            {audioLevel > 50 && (
+            {audioLevel > 30 && (
               <div className="text-white text-xs">
                 Listening...
               </div>
             )}
+          </div>
+        )}
+        
+        {recognizedText && isListening && (
+          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1">
+            {recognizedText.substring(0, 50)}{recognizedText.length > 50 ? '...' : ''}
           </div>
         )}
         

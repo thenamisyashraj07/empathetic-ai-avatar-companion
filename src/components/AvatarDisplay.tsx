@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -11,7 +10,7 @@ interface AvatarDisplayProps {
   isAnimating?: boolean;
   isSpeaking?: boolean;
   className?: string;
-  message?: string;
+  message?: string | null;
 }
 
 // Simple 3D Avatar Component
@@ -35,44 +34,44 @@ const Avatar3D = ({ emotion = 'neutral', isAnimating = false, isSpeaking = false
       {/* Head */}
       <mesh position={[0, 0, 0]} scale={isAnimating ? [1.05, 1.05, 1.05] : [1, 1, 1]}>
         <sphereGeometry args={[1, 32, 32]} />
-        <meshStandardMaterial color={new THREE.Color(getEmotionColor())} />
+        <meshStandardMaterial color={getEmotionColor()} />
       </mesh>
       
       {/* Eyes */}
       <mesh position={[-0.3, 0.2, 0.85]}>
         <sphereGeometry args={[0.12, 16, 16]} />
-        <meshStandardMaterial color={new THREE.Color("#ffffff")} />
+        <meshStandardMaterial color="#ffffff" />
       </mesh>
       <mesh position={[0.3, 0.2, 0.85]}>
         <sphereGeometry args={[0.12, 16, 16]} />
-        <meshStandardMaterial color={new THREE.Color("#ffffff")} />
+        <meshStandardMaterial color="#ffffff" />
       </mesh>
       
       {/* Pupils */}
       <mesh position={[-0.3, 0.2, 0.98]}>
         <sphereGeometry args={[0.06, 16, 16]} />
-        <meshStandardMaterial color={new THREE.Color("#000000")} />
+        <meshStandardMaterial color="#000000" />
       </mesh>
       <mesh position={[0.3, 0.2, 0.98]}>
         <sphereGeometry args={[0.06, 16, 16]} />
-        <meshStandardMaterial color={new THREE.Color("#000000")} />
+        <meshStandardMaterial color="#000000" />
       </mesh>
       
       {/* Mouth - changes based on emotion and speaking state */}
       {emotion === 'happy' || emotion === 'excited' ? (
         <mesh position={[0, -0.3, 0.85]} rotation={[0, 0, isSpeaking ? Math.PI * 0.1 : 0]}>
           <torusGeometry args={[0.4, 0.1, 16, 100, Math.PI]} />
-          <meshStandardMaterial color={new THREE.Color("#000000")} />
+          <meshStandardMaterial color="#000000" />
         </mesh>
       ) : emotion === 'sad' ? (
         <mesh position={[0, -0.5, 0.85]} rotation={[Math.PI, 0, 0]}>
           <torusGeometry args={[0.3, 0.08, 16, 100, Math.PI]} />
-          <meshStandardMaterial color={new THREE.Color("#000000")} />
+          <meshStandardMaterial color="#000000" />
         </mesh>
       ) : (
         <mesh position={[0, -0.3, 0.85]} scale={isSpeaking ? [1, 0.5 + Math.sin(Date.now() * 0.01) * 0.2, 1] : [1, 0.2, 1]}>
           <boxGeometry args={[0.5, 0.1, 0.1]} />
-          <meshStandardMaterial color={new THREE.Color("#000000")} />
+          <meshStandardMaterial color="#000000" />
         </mesh>
       )}
     </>
@@ -93,15 +92,21 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   
   // Display speech bubble when the message changes
   useEffect(() => {
-    if (message && isSpeaking) {
+    if (message) {
       setSpeechBubble(message);
       
-      // Clear the speech bubble after a delay
-      const timer = setTimeout(() => {
-        setSpeechBubble(null);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
+      // Keep the speech bubble visible as long as isSpeaking is true
+      if (!isSpeaking) {
+        // If not speaking, clear after delay
+        const timer = setTimeout(() => {
+          setSpeechBubble(null);
+        }, 5000);
+        
+        return () => clearTimeout(timer);
+      }
+    } else if (!isSpeaking) {
+      // Clear bubble when message is removed and not speaking
+      setSpeechBubble(null);
     }
   }, [message, isSpeaking]);
   
@@ -205,7 +210,10 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
           )}
           
           {speechBubble && (
-            <div className="absolute top-0 right-0 max-w-[90%] bg-white border-2 border-companion rounded-2xl p-3 m-3 shadow-lg text-sm animate-fade-in">
+            <div className={cn(
+              "absolute top-0 right-0 max-w-[90%] bg-white border-2 border-companion rounded-2xl p-3 m-3 shadow-lg text-sm",
+              isSpeaking ? "animate-pulse-subtle" : "animate-fade-in"
+            )}>
               {speechBubble}
               <div className="absolute bottom-0 right-6 w-4 h-4 bg-white border-r-2 border-b-2 border-companion transform rotate-45 translate-y-2"></div>
             </div>
@@ -232,7 +240,10 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
           )}
           
           {speechBubble && (
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 max-w-[200px] bg-white border-2 border-companion rounded-2xl p-3 shadow-lg text-sm animate-fade-in">
+            <div className={cn(
+              "absolute top-full left-1/2 -translate-x-1/2 mt-4 max-w-[200px] bg-white border-2 border-companion rounded-2xl p-3 shadow-lg text-sm",
+              isSpeaking ? "animate-pulse-subtle" : "animate-fade-in"
+            )}>
               {speechBubble}
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-2 border-t-2 border-companion transform -rotate-45"></div>
             </div>
@@ -242,7 +253,9 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
       
       <div className="mt-4 text-center font-medium text-lg">
         {isAnimating ? (
-          <span className="text-companion-dark">I'm feeling {emotion}</span>
+          <span className="text-companion-dark">
+            {isSpeaking ? "I'm speaking..." : `I'm feeling ${emotion}`}
+          </span>
         ) : (
           <span className="text-muted-foreground">AI Companion</span>
         )}

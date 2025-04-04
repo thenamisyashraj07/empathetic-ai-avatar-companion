@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { WebcamCapture } from '@/components/WebcamCapture';
 import { VoiceCapture } from '@/components/VoiceCapture';
@@ -14,23 +13,20 @@ import { EngagementTracker } from '@/components/EngagementTracker';
 const Index = () => {
   const [faceEmotion, setFaceEmotion] = useState<string>('neutral');
   const [voiceEmotion, setVoiceEmotion] = useState<string>('neutral');
-  const [isAvatarActive, setIsAvatarActive] = useState(false);
+  const [isAvatarActive, setIsAvatarActive] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentContext, setCurrentContext] = useState<'learning' | 'assessment' | 'interview'>('learning');
-  const [engagementLevel, setEngagementLevel] = useState<number>(5); // Scale of 1-10
+  const [engagementLevel, setEngagementLevel] = useState<number>(5);
   const [attentionMessage, setAttentionMessage] = useState<string | null>(null);
   const [currentAIMessage, setCurrentAIMessage] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Combined emotion from both face and voice
   const currentEmotion = isAvatarActive ? (faceEmotion !== 'neutral' ? faceEmotion : voiceEmotion) : 'neutral';
 
-  // Auto-activate AI in learning mode
   useEffect(() => {
-    if (currentContext === 'learning' && !isAvatarActive) {
+    if (currentContext === 'learning') {
       setIsAvatarActive(true);
       
-      // Welcome message
       setTimeout(() => {
         handleAISpeaking("Welcome to your learning session! I'll be monitoring your engagement and helping you stay focused.");
       }, 1000);
@@ -40,41 +36,50 @@ const Index = () => {
   const handleFaceEmotionDetected = (emotion: string) => {
     setFaceEmotion(emotion);
     
-    // Update engagement level based on emotion
     if (emotion === 'happy' || emotion === 'excited') {
       setEngagementLevel(prev => Math.min(10, prev + 1));
     } else if (emotion === 'sad' || emotion === 'angry') {
       setEngagementLevel(prev => Math.max(1, prev - 1));
     }
-    
-    if (!isAvatarActive) {
-      setIsAvatarActive(true);
-    }
   };
 
   const handleVoiceEmotionDetected = (emotion: string) => {
     setVoiceEmotion(emotion);
-    
-    if (!isAvatarActive) {
-      setIsAvatarActive(true);
-    }
   };
 
   const handleSpeechDetected = (text: string) => {
-    // Increase engagement when user speaks
     setEngagementLevel(prev => Math.min(10, prev + 0.5));
     
-    // If in learning mode, respond to common learning phrases
     if (currentContext === 'learning') {
+      let response = "";
+      
       if (text.toLowerCase().includes('explain') || text.toLowerCase().includes('understand')) {
-        handleAISpeaking("I'd be happy to explain that concept in more detail. Let me break it down step by step.");
+        response = "I'd be happy to explain that concept in more detail. Let me break it down step by step.";
       } else if (text.toLowerCase().includes('repeat') || text.toLowerCase().includes('again')) {
-        handleAISpeaking("Let me repeat that for you. Sometimes hearing information again helps solidify our understanding.");
+        response = "Let me repeat that for you. Sometimes hearing information again helps solidify our understanding.";
       } else if (text.toLowerCase().includes('difficult') || text.toLowerCase().includes('hard')) {
-        handleAISpeaking("It's okay to find this challenging. Learning new concepts takes time and practice. Let's approach it differently.");
+        response = "It's okay to find this challenging. Learning new concepts takes time and practice. Let's approach it differently.";
       } else if (text.toLowerCase().includes('bored') || text.toLowerCase().includes('boring')) {
-        handleAISpeaking("I understand this might seem dry at first. Let's try to connect it to real-world examples to make it more engaging.");
+        response = "I understand this might seem dry at first. Let's try to connect it to real-world examples to make it more engaging.";
+      } else if (text.toLowerCase().includes('hello') || text.toLowerCase().includes('hi')) {
+        response = "Hello there! How can I help with your learning today?";
+      } else if (text.toLowerCase().includes('thank')) {
+        response = "You're very welcome! I'm here to help you succeed.";
+      } else if (text.toLowerCase().includes('example')) {
+        response = "Let me provide a concrete example to illustrate this concept better.";
+      } else {
+        const genericResponses = [
+          "I heard what you said. Can you tell me more about what you're working on?",
+          "That's an interesting point. Let's explore it further.",
+          "I'm following what you're saying. Do you have any specific questions about this topic?",
+          "I'm processing what you shared. How can I best assist you with this material?"
+        ];
+        response = genericResponses[Math.floor(Math.random() * genericResponses.length)];
       }
+      
+      setTimeout(() => {
+        handleAISpeaking(response);
+      }, 800);
     }
   };
 
@@ -83,7 +88,6 @@ const Index = () => {
       setAttentionMessage(message);
       handleAISpeaking(message);
       
-      // Lower engagement level when not attentive
       setEngagementLevel(prev => Math.max(1, prev - 1));
     }
   };
@@ -92,20 +96,19 @@ const Index = () => {
     setIsSpeaking(true);
     setCurrentAIMessage(message);
     
-    // Simulate speech duration based on message length
     const speakingDuration = Math.max(2000, message.length * 80);
     
     setTimeout(() => {
       setIsSpeaking(false);
-      setCurrentAIMessage(null);
+      setTimeout(() => {
+        setCurrentAIMessage(null);
+      }, 3000);
     }, speakingDuration);
   };
 
   const handleMessageSent = (message: string) => {
-    // Simulate AI speaking response
     setIsSpeaking(true);
     
-    // Generate contextual response based on current mode
     let response = "";
     if (currentContext === 'learning') {
       if (engagementLevel < 4) {
@@ -121,22 +124,25 @@ const Index = () => {
     
     setCurrentAIMessage(response);
     
-    // Stop speaking after a delay based on response length
     const speakingDuration = Math.max(2000, response.length * 80);
     setTimeout(() => {
       setIsSpeaking(false);
-      setCurrentAIMessage(null);
+      setTimeout(() => {
+        setCurrentAIMessage(null);
+      }, 3000);
     }, speakingDuration);
   };
 
   const toggleSpeaking = () => {
     setIsSpeaking(!isSpeaking);
+    if (!isSpeaking) {
+      handleAISpeaking("Hello! I'm your AI learning assistant. How can I help you today?");
+    }
   };
 
   const handleContextChange = (context: 'learning' | 'assessment' | 'interview') => {
     setCurrentContext(context);
     
-    // Reset engagement level when switching contexts
     setEngagementLevel(5);
     
     let welcomeMessage = "";
@@ -152,7 +158,6 @@ const Index = () => {
         break;
     }
     
-    // Speak the welcome message
     handleAISpeaking(welcomeMessage);
     
     toast({
@@ -161,7 +166,6 @@ const Index = () => {
     });
   };
 
-  // Learning mode specific content
   const renderLearningModeContent = () => {
     if (currentContext !== 'learning') return null;
     
@@ -210,7 +214,6 @@ const Index = () => {
         <h1 className="text-4xl font-bold text-center text-companion-dark">Empathetic AI Companion</h1>
         <p className="text-center text-muted-foreground mt-2">An emotionally intelligent AI for educational and interview contexts</p>
         
-        {/* Context Selector */}
         <div className="flex justify-center mt-4">
           <Tabs 
             value={currentContext}
@@ -237,10 +240,8 @@ const Index = () => {
       
       <main className="container mx-auto flex-1 px-4 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column - Avatar & Sensors */}
           <div className="lg:col-span-4 lg:order-1 order-1">
             <div className="space-y-6">
-              {/* Avatar Section */}
               <Card className="overflow-hidden">
                 <CardContent className="p-6">
                   <AvatarDisplay 
@@ -250,7 +251,6 @@ const Index = () => {
                     message={currentAIMessage}
                   />
                   
-                  {/* Engagement Tracker */}
                   {currentContext !== 'interview' && (
                     <div className="mt-4">
                       <EngagementTracker level={engagementLevel} context={currentContext} />
@@ -279,12 +279,9 @@ const Index = () => {
                 </CardContent>
               </Card>
               
-              {/* Learning-specific content */}
               {renderLearningModeContent()}
               
-              {/* Webcam & Voice sections side by side on larger screens */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Webcam Capture */}
                 <Card>
                   <CardContent className="p-4">
                     <h3 className="text-lg font-medium mb-3">Facial Monitoring</h3>
@@ -296,7 +293,6 @@ const Index = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Voice Capture */}
                 <Card>
                   <CardContent className="p-4">
                     <h3 className="text-lg font-medium mb-3">Voice Interaction</h3>
@@ -312,7 +308,6 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Right Column - Chat Interface */}
           <div className="lg:col-span-8 lg:order-2 order-2">
             <Card className="h-full">
               <CardContent className="p-6">
