@@ -9,6 +9,7 @@ import { Volume, VolumeOff, MessageCircle, GraduationCap, FileCheck, Briefcase, 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { EngagementTracker } from '@/components/EngagementTracker';
+import BackgroundScene from '@/components/BackgroundScene';
 
 const Index = () => {
   const [faceEmotion, setFaceEmotion] = useState<string>('neutral');
@@ -209,7 +210,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-companion-light to-background">
+    <div className="min-h-screen flex flex-col">
+      <BackgroundScene context={currentContext} />
+      
       <header className="container mx-auto py-6">
         <h1 className="text-4xl font-bold text-center text-companion-dark">Empathetic AI Companion</h1>
         <p className="text-center text-muted-foreground mt-2">An emotionally intelligent AI for educational and interview contexts</p>

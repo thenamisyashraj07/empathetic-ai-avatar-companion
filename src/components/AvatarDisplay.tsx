@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { cn } from '@/lib/utils';
 
@@ -13,65 +12,112 @@ interface AvatarDisplayProps {
   message?: string | null;
 }
 
-// 3D Avatar Component
+// Enhanced 3D Avatar Component
 const Avatar3D = ({ emotion = 'neutral', isAnimating = false, isSpeaking = false }) => {
-  // Color based on emotion
+  // Enhanced emotion colors with gradients
   const getEmotionColor = () => {
     switch(emotion) {
-      case 'happy': return '#4ade80'; // green
-      case 'sad': return '#60a5fa'; // blue
-      case 'angry': return '#f87171'; // red
-      case 'surprised': return '#facc15'; // yellow
-      case 'anxious': return '#fb923c'; // orange
-      case 'excited': return '#ec4899'; // pink
-      case 'calm': return '#38bdf8'; // sky
-      default: return '#8b5cf6'; // purple (default companion color)
+      case 'happy': return new THREE.Color('#4ade80').multiplyScalar(1.2);
+      case 'sad': return new THREE.Color('#60a5fa').multiplyScalar(1.2);
+      case 'angry': return new THREE.Color('#f87171').multiplyScalar(1.2);
+      case 'surprised': return new THREE.Color('#facc15').multiplyScalar(1.2);
+      case 'anxious': return new THREE.Color('#fb923c').multiplyScalar(1.2);
+      case 'excited': return new THREE.Color('#ec4899').multiplyScalar(1.2);
+      case 'calm': return new THREE.Color('#38bdf8').multiplyScalar(1.2);
+      default: return new THREE.Color('#8b5cf6').multiplyScalar(1.2);
     }
   };
 
   return (
     <>
-      {/* Head */}
+      {/* Enhanced Head with better shading */}
       <mesh position={[0, 0, 0]} scale={isAnimating ? [1.05, 1.05, 1.05] : [1, 1, 1]}>
-        <sphereGeometry args={[1, 32, 32]} />
-        <meshStandardMaterial color={getEmotionColor()} />
+        <sphereGeometry args={[1, 64, 64]} />
+        <meshStandardMaterial 
+          color={getEmotionColor()} 
+          metalness={0.3}
+          roughness={0.7}
+          envMapIntensity={1}
+        />
       </mesh>
       
-      {/* Eyes */}
+      {/* Enhanced Eyes with depth */}
       <mesh position={[-0.3, 0.2, 0.85]}>
-        <sphereGeometry args={[0.12, 16, 16]} />
-        <meshStandardMaterial color="#ffffff" />
+        <sphereGeometry args={[0.15, 32, 32]} />
+        <meshPhysicalMaterial 
+          color="#ffffff"
+          clearcoat={1}
+          clearcoatRoughness={0}
+          metalness={0.1}
+        />
       </mesh>
       <mesh position={[0.3, 0.2, 0.85]}>
-        <sphereGeometry args={[0.12, 16, 16]} />
-        <meshStandardMaterial color="#ffffff" />
+        <sphereGeometry args={[0.15, 32, 32]} />
+        <meshPhysicalMaterial 
+          color="#ffffff"
+          clearcoat={1}
+          clearcoatRoughness={0}
+          metalness={0.1}
+        />
       </mesh>
       
-      {/* Pupils */}
+      {/* Enhanced Pupils with shine */}
       <mesh position={[-0.3, 0.2, 0.98]}>
-        <sphereGeometry args={[0.06, 16, 16]} />
-        <meshStandardMaterial color="#000000" />
+        <sphereGeometry args={[0.08, 32, 32]} />
+        <meshStandardMaterial 
+          color="#000000"
+          metalness={0.9}
+          roughness={0.1}
+        />
       </mesh>
       <mesh position={[0.3, 0.2, 0.98]}>
-        <sphereGeometry args={[0.06, 16, 16]} />
-        <meshStandardMaterial color="#000000" />
+        <sphereGeometry args={[0.08, 32, 32]} />
+        <meshStandardMaterial 
+          color="#000000"
+          metalness={0.9}
+          roughness={0.1}
+        />
       </mesh>
       
-      {/* Mouth - changes based on emotion and speaking state */}
+      {/* Enhanced Mouth with better animations */}
       {emotion === 'happy' || emotion === 'excited' ? (
-        <mesh position={[0, -0.3, 0.85]} rotation={[0, 0, isSpeaking ? Math.PI * 0.1 : 0]}>
-          <torusGeometry args={[0.4, 0.1, 16, 100, Math.PI]} />
-          <meshStandardMaterial color="#000000" />
+        <mesh 
+          position={[0, -0.3, 0.85]} 
+          rotation={[0, 0, isSpeaking ? Math.sin(Date.now() * 0.01) * 0.1 : 0]}
+        >
+          <torusGeometry args={[0.4, 0.12, 32, 100, Math.PI]} />
+          <meshPhysicalMaterial 
+            color="#000000"
+            clearcoat={0.5}
+            metalness={0.5}
+            roughness={0.2}
+          />
         </mesh>
       ) : emotion === 'sad' ? (
-        <mesh position={[0, -0.5, 0.85]} rotation={[Math.PI, 0, 0]}>
-          <torusGeometry args={[0.3, 0.08, 16, 100, Math.PI]} />
-          <meshStandardMaterial color="#000000" />
+        <mesh 
+          position={[0, -0.5, 0.85]} 
+          rotation={[Math.PI, 0, 0]}
+        >
+          <torusGeometry args={[0.3, 0.1, 32, 100, Math.PI]} />
+          <meshPhysicalMaterial 
+            color="#000000"
+            clearcoat={0.5}
+            metalness={0.5}
+            roughness={0.2}
+          />
         </mesh>
       ) : (
-        <mesh position={[0, -0.3, 0.85]} scale={isSpeaking ? [1, 0.5 + Math.sin(Date.now() * 0.01) * 0.2, 1] : [1, 0.2, 1]}>
-          <boxGeometry args={[0.5, 0.1, 0.1]} />
-          <meshStandardMaterial color="#000000" />
+        <mesh 
+          position={[0, -0.3, 0.85]} 
+          scale={isSpeaking ? [1, 0.5 + Math.sin(Date.now() * 0.01) * 0.2, 1] : [1, 0.2, 1]}
+        >
+          <boxGeometry args={[0.5, 0.12, 0.12]} />
+          <meshPhysicalMaterial 
+            color="#000000"
+            clearcoat={0.5}
+            metalness={0.5}
+            roughness={0.2}
+          />
         </mesh>
       )}
     </>

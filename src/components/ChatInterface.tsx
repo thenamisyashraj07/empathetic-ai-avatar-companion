@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, MessageCircle, Mic, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { textToSpeech } from '@/utils/textToSpeech';
 
 interface Message {
   id: string;
@@ -46,7 +47,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     scrollToBottom();
   }, [messages]);
   
-  // Update initial message when context changes
   useEffect(() => {
     setMessages([
       {
@@ -57,7 +57,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     ]);
   }, [context]);
 
-  // Initialize Web Speech API for the chat interface
   useEffect(() => {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognitionAPI && !recognitionRef.current) {
@@ -70,7 +69,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         const transcript = event.results[0][0].transcript;
         if (transcript) {
           setInputValue(transcript);
-          // Auto-send the message after voice recognition
           setTimeout(() => {
             handleSendMessage(transcript);
           }, 300);
@@ -137,11 +135,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       
       setMessages(prev => [...prev, aiMessage]);
       setIsTyping(false);
+      
+      textToSpeech.speak(response);
     }, Math.random() * 1000 + 1000);
   };
 
   const generateContextAwareResponse = (message: string, emotion?: string, context?: string, engagement?: number): string => {
-    // Base response on context first, then emotion
     if (context === 'learning') {
       if (engagement && engagement < 3) {
         return "I notice you seem disengaged. Would you like to take a short break or try a different approach to this topic?";
@@ -182,7 +181,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
     }
     
-    // If no context-specific response, fall back to emotion-based responses
     if (emotion === 'happy') {
       return "I'm glad you're feeling happy! " + (message.includes('?') ? "That's a great question!" : "Thanks for sharing that with me!") + " I'm here to keep the positive vibes going. 😊";
     } else if (emotion === 'sad') {
@@ -248,7 +246,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     });
   };
 
-  // Add helper text based on context
   const getPlaceholderText = () => {
     switch (context) {
       case 'learning':
