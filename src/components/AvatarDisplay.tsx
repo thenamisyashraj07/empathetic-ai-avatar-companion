@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
+import { cn } from '@/lib/utils';
 
 interface AvatarDisplayProps {
   emotion?: string;
