@@ -5,47 +5,48 @@
 
 @layer base {
   :root {
-    --background: 260 50% 98%;
-    --foreground: 260 10% 10%;
+    --background: 260 25% 12%;
+    --foreground: 260 10% 90%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 260 10% 10%;
+    --card: 260 25% 15%;
+    --card-foreground: 260 10% 90%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 260 10% 10%;
+    --popover: 260 25% 15%;
+    --popover-foreground: 260 10% 90%;
 
     --primary: 260 70% 65%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 260 30% 90%;
-    --secondary-foreground: 260 10% 10%;
+    --secondary: 260 25% 20%;
+    --secondary-foreground: 260 10% 90%;
 
-    --muted: 260 20% 90%;
-    --muted-foreground: 260 10% 40%;
+    --muted: 260 25% 20%;
+    --muted-foreground: 260 10% 60%;
 
-    --accent: 260 40% 90%;
-    --accent-foreground: 260 10% 10%;
+    --accent: 260 25% 20%;
+    --accent-foreground: 260 10% 90%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 260 10% 90%;
 
-    --border: 260 20% 85%;
-    --input: 260 20% 85%;
+    --border: 260 25% 25%;
+    --input: 260 25% 25%;
     --ring: 260 70% 65%;
 
     --radius: 1rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
+    /* Keep dark mode CSS the same, already dark enough */
     --background: 260 25% 12%;
     --foreground: 260 10% 90%;
 
@@ -87,10 +88,85 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border selection:bg-white/10 selection:text-white;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
   }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/10 border border-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.45)];
+  }
+  
+  .neo-blur {
+    @apply backdrop-blur-2xl bg-black/40 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)];
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-br from-white via-white/90 to-white/70 bg-clip-text text-transparent;
+  }
+
+  .gradient-border {
+    @apply relative before:content-[""] before:absolute before:inset-0 before:-z-10 before:p-[1px] 
+    before:bg-gradient-to-r before:from-purple-500 before:via-pink-400 before:to-blue-600 
+    before:rounded-xl before:opacity-60;
+  }
+
+  .animated-glow {
+    animation: glow 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    0% { filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.5)); }
+    100% { filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.8)); }
+  }
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
 }

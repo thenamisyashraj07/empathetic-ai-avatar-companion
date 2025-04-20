@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { WebcamCapture } from '@/components/WebcamCapture';
 import { VoiceCapture } from '@/components/VoiceCapture';
@@ -214,10 +215,10 @@ const Index = () => {
       <BackgroundScene context={currentContext} />
       
       <header className="container mx-auto py-6 relative z-10">
-        <h1 className="text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+        <h1 className="text-5xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 animated-glow">
           Empathetic AI Companion
         </h1>
-        <p className="text-center text-muted-foreground mt-2 text-lg">
+        <p className="text-center mt-2 text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-300 to-pink-400">
           An emotionally intelligent AI for educational and interview contexts
         </p>
         
@@ -225,26 +226,26 @@ const Index = () => {
           <Tabs 
             value={currentContext}
             onValueChange={(value) => handleContextChange(value as 'learning' | 'assessment' | 'interview')}
-            className="w-full max-w-md bg-black/20 backdrop-blur-lg rounded-lg p-1"
+            className="w-full max-w-md neo-blur rounded-xl p-1"
           >
             <TabsList className="grid w-full grid-cols-3 bg-transparent">
               <TabsTrigger 
                 value="learning"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white transition-all duration-300"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300"
               >
                 <GraduationCap className="mr-2 h-4 w-4" />
                 Learning
               </TabsTrigger>
               <TabsTrigger 
                 value="assessment"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-500 data-[state=active]:text-white transition-all duration-300"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300"
               >
                 <FileCheck className="mr-2 h-4 w-4" />
                 Assessment
               </TabsTrigger>
               <TabsTrigger 
                 value="interview"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-rose-500 data-[state=active]:text-white transition-all duration-300"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-rose-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300"
               >
                 <Briefcase className="mr-2 h-4 w-4" />
                 Interview
@@ -258,7 +259,7 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 lg:order-1 order-1">
             <div className="space-y-6">
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden glass-card">
                 <CardContent className="p-6">
                   <AvatarDisplay 
                     emotion={currentEmotion} 
@@ -277,7 +278,7 @@ const Index = () => {
                     <Button
                       variant={isSpeaking ? "default" : "outline"}
                       onClick={toggleSpeaking}
-                      className="flex items-center"
+                      className={`flex items-center ${isSpeaking ? 'bg-gradient-to-r from-purple-600 to-indigo-600' : 'glass-card'} transition-all duration-300 hover:shadow-lg`}
                     >
                       {isSpeaking ? (
                         <>
@@ -298,9 +299,9 @@ const Index = () => {
               {renderLearningModeContent()}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
+                <Card className="glass-card">
                   <CardContent className="p-4">
-                    <h3 className="text-lg font-medium mb-3">Facial Monitoring</h3>
+                    <h3 className="text-lg font-medium mb-3 text-gradient">Facial Monitoring</h3>
                     <WebcamCapture 
                       onEmotionDetected={handleFaceEmotionDetected}
                       onAttentionStatus={handleAttentionStatus}
@@ -309,9 +310,9 @@ const Index = () => {
                   </CardContent>
                 </Card>
                 
-                <Card>
+                <Card className="glass-card">
                   <CardContent className="p-4">
-                    <h3 className="text-lg font-medium mb-3">Voice Interaction</h3>
+                    <h3 className="text-lg font-medium mb-3 text-gradient">Voice Interaction</h3>
                     <VoiceCapture 
                       onEmotionDetected={handleVoiceEmotionDetected} 
                       onSpeechDetected={handleSpeechDetected}
@@ -325,11 +326,11 @@ const Index = () => {
           </div>
           
           <div className="lg:col-span-8 lg:order-2 order-2">
-            <Card className="h-full">
+            <Card className="h-full glass-card gradient-border">
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
                   <MessageCircle className="mr-2 h-5 w-5 text-companion" />
-                  <h2 className="text-xl font-medium">Chat with AI Companion</h2>
+                  <h2 className="text-xl font-medium text-gradient">Chat with AI Companion</h2>
                 </div>
                 
                 <ChatInterface 
