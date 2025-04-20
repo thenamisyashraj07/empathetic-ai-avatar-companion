@@ -213,26 +213,39 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <BackgroundScene context={currentContext} />
       
-      <header className="container mx-auto py-6">
-        <h1 className="text-4xl font-bold text-center text-companion-dark">Empathetic AI Companion</h1>
-        <p className="text-center text-muted-foreground mt-2">An emotionally intelligent AI for educational and interview contexts</p>
+      <header className="container mx-auto py-6 relative z-10">
+        <h1 className="text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+          Empathetic AI Companion
+        </h1>
+        <p className="text-center text-muted-foreground mt-2 text-lg">
+          An emotionally intelligent AI for educational and interview contexts
+        </p>
         
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center mt-6">
           <Tabs 
             value={currentContext}
             onValueChange={(value) => handleContextChange(value as 'learning' | 'assessment' | 'interview')}
-            className="w-full max-w-md"
+            className="w-full max-w-md bg-black/20 backdrop-blur-lg rounded-lg p-1"
           >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="learning">
+            <TabsList className="grid w-full grid-cols-3 bg-transparent">
+              <TabsTrigger 
+                value="learning"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white transition-all duration-300"
+              >
                 <GraduationCap className="mr-2 h-4 w-4" />
                 Learning
               </TabsTrigger>
-              <TabsTrigger value="assessment">
+              <TabsTrigger 
+                value="assessment"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-500 data-[state=active]:text-white transition-all duration-300"
+              >
                 <FileCheck className="mr-2 h-4 w-4" />
                 Assessment
               </TabsTrigger>
-              <TabsTrigger value="interview">
+              <TabsTrigger 
+                value="interview"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-rose-500 data-[state=active]:text-white transition-all duration-300"
+              >
                 <Briefcase className="mr-2 h-4 w-4" />
                 Interview
               </TabsTrigger>
