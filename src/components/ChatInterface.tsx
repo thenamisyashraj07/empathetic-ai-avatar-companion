@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +39,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -56,6 +56,34 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
     ]);
   }, [context]);
+
+  // Initialize Web Speech API for the chat interface
+  useEffect(() => {
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognitionAPI && !recognitionRef.current) {
+      const recognition = new SpeechRecognitionAPI();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+      
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setInputValue(transcript);
+          // Auto-send the message after voice recognition
+          setTimeout(() => {
+            handleSendMessage(transcript);
+          }, 300);
+        }
+      };
+      
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+      
+      recognitionRef.current = recognition;
+    }
+  }, []);
   
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -74,12 +102,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  const handleSendMessage = (text?: string) => {
+    const messageText = text || inputValue;
+    if (!messageText.trim()) return;
     
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: messageText,
       sender: 'user'
     };
     
@@ -87,10 +116,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setInputValue('');
     
     if (onSendMessage) {
-      onSendMessage(inputValue);
+      onSendMessage(messageText);
     }
     
-    simulateResponse(inputValue, detectedEmotion);
+    simulateResponse(messageText, detectedEmotion);
   };
 
   const simulateResponse = (userMessage: string, emotion?: string) => {
@@ -186,23 +215,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const toggleListening = () => {
-    if (!isListening) {
+    if (!isListening && recognitionRef.current) {
       setIsListening(true);
+      recognitionRef.current.start();
+      
       toast({
         title: "Voice Recognition Active",
         description: "I'm listening to you now. Speak clearly...",
       });
-      
-      setTimeout(() => {
-        setIsListening(false);
-        setInputValue(prev => prev + (prev ? " " : "") + "I'm speaking to you through voice recognition");
-        toast({
-          title: "Voice Recognition Complete",
-          description: "I've processed what you said.",
-        });
-      }, 3000);
-    } else {
+    } else if (isListening && recognitionRef.current) {
       setIsListening(false);
+      recognitionRef.current.stop();
+      
       toast({
         title: "Voice Recognition Stopped",
         description: "I've stopped listening.",
@@ -315,7 +339,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <Mic className="h-4 w-4" />
           </Button>
           <Button 
-            onClick={handleSendMessage} 
+            onClick={() => handleSendMessage()} 
             disabled={!inputValue.trim()}
             title="Send message"
           >

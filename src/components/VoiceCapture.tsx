@@ -92,6 +92,9 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
           if (onSpeechDetected) {
             onSpeechDetected(finalTranscript);
             
+            // Immediately generate AI response through text-to-speech
+            generateAIResponse(finalTranscript);
+            
             toast({
               title: "Speech Detected",
               description: finalTranscript,
@@ -116,40 +119,73 @@ export const VoiceCapture: React.FC<VoiceCaptureProps> = ({
     }
   }, [onSpeechDetected, toast, isListening]);
 
+  // Generate immediate AI response to speech
+  const generateAIResponse = (text: string) => {
+    if (!text) return;
+    
+    let response = "";
+    
+    if (text.toLowerCase().includes('explain') || text.toLowerCase().includes('understand')) {
+      response = "I'd be happy to explain that concept in more detail. Let me break it down step by step.";
+    } else if (text.toLowerCase().includes('repeat') || text.toLowerCase().includes('again')) {
+      response = "Let me repeat that for you. Sometimes hearing information again helps solidify our understanding.";
+    } else if (text.toLowerCase().includes('difficult') || text.toLowerCase().includes('hard')) {
+      response = "It's okay to find this challenging. Learning new concepts takes time and practice. Let's approach it differently.";
+    } else if (text.toLowerCase().includes('bored') || text.toLowerCase().includes('boring')) {
+      response = "I understand this might seem dry at first. Let's try to connect it to real-world examples to make it more engaging.";
+    } else if (text.toLowerCase().includes('hello') || text.toLowerCase().includes('hi')) {
+      response = "Hello there! How can I help with your learning today?";
+    } else if (text.toLowerCase().includes('thank')) {
+      response = "You're very welcome! I'm here to help you succeed.";
+    } else if (text.toLowerCase().includes('example')) {
+      response = "Let me provide a concrete example to illustrate this concept better.";
+    } else {
+      const genericResponses = [
+        "I heard what you said. Can you tell me more about what you're working on?",
+        "That's an interesting point. Let's explore it further.",
+        "I'm following what you're saying. Do you have any specific questions about this topic?",
+        "I'm processing what you shared. How can I best assist you with this material?"
+      ];
+      response = genericResponses[Math.floor(Math.random() * genericResponses.length)];
+    }
+    
+    // Speak the AI response
+    if (onTextToSpeech) {
+      onTextToSpeech(response);
+    } else {
+      speakWithWebSpeech(response);
+    }
+  };
+
   // Demo AI voice responses using Web Speech API
   const speakWithWebSpeech = (text: string) => {
-    if (onTextToSpeech) {
-      setIsSpeakingDemo(true);
-      
-      // Use the Web Speech API for text-to-speech
-      const speech = new SpeechSynthesisUtterance();
-      speech.text = text;
-      speech.volume = 1;
-      speech.rate = 1;
-      speech.pitch = 1;
-      
-      // Try to find a more natural female voice
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(voice => 
-        voice.name.includes('Female') || 
-        voice.name.includes('Samantha') || 
-        voice.name.includes('Google') ||
-        voice.name.includes('Assistant')
-      );
-      
-      if (preferredVoice) {
-        speech.voice = preferredVoice;
-      }
-      
-      speech.onend = () => {
-        setIsSpeakingDemo(false);
-      };
-      
-      window.speechSynthesis.speak(speech);
-      
-      // Pass to parent component as well
-      onTextToSpeech(text);
+    setIsSpeakingDemo(true);
+    
+    // Use the Web Speech API for text-to-speech
+    const speech = new SpeechSynthesisUtterance();
+    speech.text = text;
+    speech.volume = 1;
+    speech.rate = 1;
+    speech.pitch = 1;
+    
+    // Try to find a more natural female voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(voice => 
+      voice.name.includes('Female') || 
+      voice.name.includes('Samantha') || 
+      voice.name.includes('Google') ||
+      voice.name.includes('Assistant')
+    );
+    
+    if (preferredVoice) {
+      speech.voice = preferredVoice;
     }
+    
+    speech.onend = () => {
+      setIsSpeakingDemo(false);
+    };
+    
+    window.speechSynthesis.speak(speech);
   };
 
   const startListening = async () => {
