@@ -36,8 +36,7 @@ const BackgroundScene: React.FC<BackgroundSceneProps> = ({ context }) => {
             <Cloud
               opacity={0.5}
               speed={0.4}
-              width={10}
-              depth={1.5}
+              position={[0, 0, 0]}
               segments={20}
             />
           </>
@@ -49,8 +48,7 @@ const BackgroundScene: React.FC<BackgroundSceneProps> = ({ context }) => {
             <Cloud
               opacity={0.3}
               speed={0.2}
-              width={20}
-              depth={2}
+              position={[0, 0, 0]}
               segments={15}
             />
           </>
@@ -62,8 +60,7 @@ const BackgroundScene: React.FC<BackgroundSceneProps> = ({ context }) => {
             <Cloud
               opacity={0.4}
               speed={0.3}
-              width={15}
-              depth={1.8}
+              position={[0, 0, 0]}
               segments={18}
             />
           </>
